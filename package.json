@@ -1,0 +1,62 @@
+{
+  "name": "cf-react-error-reporter",
+  "author": "Ridel Saavedra Flores",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Librería de react para reportar errores en aplicaciones React",
+  "main": "./dist/cf-react-error-reporter.umd.js",
+  "module": "./dist/cf-react-error-reporter.es.js",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/cf-react-error-reporter.es.js",
+      "types": "./dist/types/index.d.ts",
+      "require": "./dist/cf-react-error-reporter.umd.js"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc -b",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "check:coverage": "node check-coverage.js",
+    "prepublishOnly": "yarn test:coverage && yarn check:coverage"
+  },
+  "peerDependencies": {
+    "react": ">=16.0.0",
+    "react-dom": ">=16.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^24.1.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "eslint": "^9.31.0",
+    "jsdom": "^26.1.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.5",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "html2canvas": "^1.4.1",
+    "js-sha256": "^0.11.1"
+  }
+}
