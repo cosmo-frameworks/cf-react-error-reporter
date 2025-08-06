@@ -148,4 +148,4 @@ app.listen(3001, () => console.log("Report backend running on port 3001"));
 
 ## 📄 License
 
-MIT © 2025 — Made by @shakar.
+MIT © 2025 — Made by [shakar](https://portfolio.shakarzr.com/)
