@@ -1,11 +1,11 @@
-import { ErrorReporterConfig } from "./types";
+import { ErrorReporterConfigT } from "./types";
 
-let config: ErrorReporterConfig;
+let config: ErrorReporterConfigT;
 
-export function configureReporter(cfg: ErrorReporterConfig) {
+export function configureReporter(cfg: ErrorReporterConfigT): void {
   config = cfg;
 }
 
-export function getReporterConfig() {
+export function getReporterConfig(): ErrorReporterConfigT {
   return config;
 }

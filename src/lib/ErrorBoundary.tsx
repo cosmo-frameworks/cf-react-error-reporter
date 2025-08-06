@@ -2,18 +2,18 @@ import React from "react";
 import { getReporterConfig } from "./config";
 import { sendIssueToProvider } from "./reporters/sendIssue";
 
-type Props = {
+type PropsT = {
   children: React.ReactNode;
   fallback?: React.ReactNode;
 };
 
-type State = {
+type StateT = {
   hasError: boolean;
   error: Error | null;
 };
 
-export class ErrorBoundary extends React.Component<Props, State> {
-  constructor(props: Props) {
+export class ErrorBoundary extends React.Component<PropsT, StateT> {
+  constructor(props: PropsT) {
     super(props);
     this.state = { hasError: false, error: null };
   }

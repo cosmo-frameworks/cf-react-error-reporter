@@ -1,6 +1,6 @@
-export type Mode = "frontend" | "backend" | "auto";
+export type ModeT = "frontend" | "backend" | "auto";
 
-export type ErrorReporterConfig = {
+export type ErrorReporterConfigT = {
   provider: "github";
   apiKey?: string;
   repo: string;
