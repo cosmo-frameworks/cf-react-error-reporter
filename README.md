@@ -1,7 +1,7 @@
 # cf-react-error-reporter
 
 [![Build Status](https://github.com/cosmo-frameworks/cf-react-error-reporter/actions/workflows/publish.yml/badge.svg)](https://github.com/cosmo-frameworks/cf-react-error-reporter/actions)
-[![codecov](https://codecov.io/github/cosmo-frameworks/cf-react-error-reporter/graph/badge.svg?token=9NLJ1LS7W5)](https://codecov.io/github/cosmo-frameworks/cf-react-error-reporter)
+[![codecov](https://codecov.io/github/cosmo-frameworks/cf-react-error-reporter/branch/master/graph/badge.svg?token=qdcCsvksE0)](https://codecov.io/github/cosmo-frameworks/cf-react-error-reporter)
 [![npm](https://img.shields.io/npm/v/cf-react-error-reporter)](https://www.npmjs.com/package/cf-react-error-reporter)
 
 > 🛡️ A React library that detects runtime errors and automatically creates issues on platforms like GitHub. It also sends alerts via Discord, groups similar errors, and more.
