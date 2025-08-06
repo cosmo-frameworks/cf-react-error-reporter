@@ -1,38 +1,35 @@
 # cf-react-error-reporter
 
-> 🛡️ Librería para React que detecta errores en tiempo de ejecución y crea automáticamente issues en plataformas como GitHub, además de enviar alertas por Discord, agrupar errores, y más.
+[![Build Status](https://github.com/cosmo-frameworks/cf-react-error-reporter/actions/workflows/publish.yml/badge.svg)](https://github.com/cosmo-frameworks/cf-react-error-reporter/actions)
+[![codecov](https://codecov.io/github/cosmo-frameworks/cf-react-error-reporter/graph/badge.svg?token=9NLJ1LS7W5)](https://codecov.io/github/cosmo-frameworks/cf-react-error-reporter)
+[![npm](https://img.shields.io/npm/v/cf-react-error-reporter)](https://www.npmjs.com/package/cf-react-error-reporter)
+
+> 🛡️ A React library that detects runtime errors and automatically creates issues on platforms like GitHub. It also sends alerts via Discord, groups similar errors, and more.
 
 ---
 
-## 🚀 Instalación
+## 🚀 Installation
 
 ```bash
 npm install cf-react-error-reporter
 ```
 
-Para capturas visuales:
+---
 
-```bash
-npm install html2canvas
-```
+## 📦 Key Features
+
+- Error capture using `ErrorBoundary`
+- Global error capture (`window.onerror`, `onunhandledrejection`)
+- Smart grouping using fingerprint/hash
+- Automatic reporting as GitHub issues
+- Automatic fallback to backend if frontend fails
+- Local storage of pending errors with retry logic
+- Optional Discord notifications
+- Manual hook `useErrorReporter()` and `reportTestError()` function
 
 ---
 
-## 📦 Características principales
-
-- Captura de errores con `ErrorBoundary`
-- Captura global (`window.onerror`, `onunhandledrejection`)
-- Agrupación inteligente por huella digital (hash/fingerprint)
-- Reporte automático como issue en GitHub
-- Fallback automático a backend si falla el frontend
-- Almacenamiento local de errores pendientes con reintento
-- Notificaciones opcionales por Discord
-- Hook manual `useErrorReporter()` y función `reportTestError()`
-- Plugin para Vite que configura todo automáticamente
-
----
-
-## 🔧 Configuración básica
+## 🔧 Basic Setup
 
 ```ts
 import {
@@ -48,32 +45,32 @@ configureReporter({
   user: "mi-usuario",
   repo: "mi-repo",
   apiKey: import.meta.env.VITE_GITHUB_TOKEN,
-  discordWebhook: import.meta.env.VITE_DISCORD_WEBHOOK, // opcional
+  discordWebhook: import.meta.env.VITE_DISCORD_WEBHOOK, // optional
   onlyInProduction: true,
   mode: "auto", // 'frontend' | 'backend' | 'auto'
 });
 
-enableGlobalCapture(); // Captura errores globales
+enableGlobalCapture(); // Enable global error capturing
 ```
 
-En tu render:
+In your render:
 
 ```tsx
-<ErrorBoundary fallback={<div>Algo salió mal 😓</div>}>
+<ErrorBoundary fallback={<div>Something went wrong</div>}>
   <App />
 </ErrorBoundary>
 ```
 
 ---
 
-## 🧠 Uso manual con `useErrorReporter()`
+## 🧠 Manual Usage with `useErrorReporter()`
 
 ```ts
 const { reportError } = useErrorReporter();
-reportError(new Error("Algo falló"), "Descripción opcional");
+reportError(new Error("Something went wrong"), "Optional description");
 ```
 
-Para probar conectividad:
+To test connectivity:
 
 ```ts
 reportTestError();
@@ -81,24 +78,24 @@ reportTestError();
 
 ---
 
-## ⚙️ Opciones de configuración
+## ⚙️ Configuration Options
 
-| Opción             | Tipo                                | Descripción                                    |
-| ------------------ | ----------------------------------- | ---------------------------------------------- |
-| `provider`         | `'github'`                          | Actualmente solo GitHub soportado              |
-| `user`             | `string`                            | Usuario u organización GitHub                  |
-| `repo`             | `string`                            | Repositorio donde crear issues                 |
-| `apiKey`           | `string`                            | GitHub Personal Access Token                   |
-| `backendUrl`       | `string`                            | URL a backend opcional (para CORS o seguridad) |
-| `mode`             | `'frontend' \| 'backend' \| 'auto'` | Modo de envío                                  |
-| `discordWebhook`   | `string`                            | Webhook de Discord para alertas                |
-| `onlyInProduction` | `boolean`                           | Solo reportar si `NODE_ENV === 'production'`   |
+| Opción             | Tipo                                | Descripción                                 |
+| ------------------ | ----------------------------------- | ------------------------------------------- |
+| `provider`         | `'github'`                          | Currently only GitHub is supported          |
+| `user`             | `string`                            | GitHub user or organization                 |
+| `repo`             | `string`                            | Repository to create issues in              |
+| `apiKey`           | `string`                            | GitHub Personal Access Token                |
+| `backendUrl`       | `string`                            | Optional backend URL (for CORS or security) |
+| `mode`             | `'frontend' \| 'backend' \| 'auto'` | Submission mode                             |
+| `discordWebhook`   | `string`                            | Discord webhook for alerts                  |
+| `onlyInProduction` | `boolean`                           | Only report if `NODE_ENV === 'production'`  |
 
 ---
 
-## 🖥️ Backend opcional (Node.js)
+## 🖥️ Optional Backend (Node.js)
 
-Si no puedes llamar a la API de GitHub desde el navegador (CORS, seguridad), monta un backend:
+If you can’t call the GitHub API from the browser (due to CORS or security concerns), you can set up a backend:
 
 ```ts
 // server.js (Express)
@@ -112,7 +109,7 @@ app.use(bodyParser.json());
 app.post("/report-error", async (req, res) => {
   const { title, body } = req.body;
   const response = await fetch(
-    `https://api.github.com/repos/USUARIO/REPO/issues`,
+    `https://api.github.com/repos/USER/REPO/issues`,
     {
       method: "POST",
       headers: {
@@ -127,28 +124,28 @@ app.post("/report-error", async (req, res) => {
   res.status(response.status).json(data);
 });
 
-app.listen(3001, () => console.log("Report backend activo en puerto 3001"));
+app.listen(3001, () => console.log("Report backend running on port 3001"));
 ```
 
 ---
 
-## 🔐 Seguridad
+## 🔐 Security
 
-- Nunca expongas el `apiKey` en entornos públicos si no usas backend.
-- Usa `onlyInProduction: true` para evitar reportes en desarrollo.
-
----
-
-## ✅ Roadmap futuro
-
-- Soporte para GitLab, Jira, Trello
-- Captura de logs recientes (`console.log`, etc)
-- UI de errores pendientes
-- Exportación a formatos como CSV o JSON
-- Envío a múltiples plataformas simultáneamente
+- Never expose your `apiKey` in public environments unless using a backend.
+- Use `onlyInProduction: true` to avoid reporting during development.
 
 ---
 
-## 📄 Licencia
+## ✅ Future Roadmap
 
-MIT © 2025 — Hecho con 💻 por tu equipo favorito.
+- Support for GitLab, Jira, Trello
+- Recent log capture (`console.log`, etc)
+- UI for pending errors
+- Export to formats like CSV or JSON
+- Simultaneous multi-platform reporting
+
+---
+
+## 📄 License
+
+MIT © 2025 — Made by @shakar.
