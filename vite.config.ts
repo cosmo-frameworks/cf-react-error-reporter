@@ -29,11 +29,10 @@ export default defineConfig(() => ({
       provider: "v8",
       reporter: ["text", "json", "html"],
       exclude: [
-        "check-coverage.js",
         "node_modules/",
-        "src/lib/globalErrorListener",
-        "src/lib/utils/errorCache",
+        "check-coverage.js",
         "src/setupTests.ts",
+        "src/lib/utils/errorCache.ts",
         "**/index.ts",
         "**/*.d.ts",
         "**/*.config.*",
