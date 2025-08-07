@@ -80,7 +80,7 @@ reportTestError();
 
 ## ⚙️ Configuration Options
 
-| Opción             | Tipo                                | Descripción                                 |
+| Option             | Type                                | Description                                 |
 | ------------------ | ----------------------------------- | ------------------------------------------- |
 | `provider`         | `'github'`                          | Currently only GitHub is supported          |
 | `user`             | `string`                            | GitHub user or organization                 |
@@ -90,6 +90,19 @@ reportTestError();
 | `mode`             | `'frontend' \| 'backend' \| 'auto'` | Submission mode                             |
 | `discordWebhook`   | `string`                            | Discord webhook for alerts                  |
 | `onlyInProduction` | `boolean`                           | Only report if `NODE_ENV === 'production'`  |
+
+---
+
+## 🔧 Compatibility
+
+The following table show the compatibility with de `mode` option with the diferents providers
+
+| Provider | Frontend | Backend |
+| -------- | -------- | ------- |
+| Github   | ✅       | ✅      |
+| Gitlab   | ✅       | ✅      |
+| Trello   | ✅       | ✅      |
+| Jira     | ❌       | ✅      |
 
 ---
 
