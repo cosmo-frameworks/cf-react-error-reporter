@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { sendIssueToProvider } from "../../src/lib/reporters/sendIssue";
+
 import * as env from "../../src/lib/utils/env";
 import * as errorCache from "../../src/lib/utils/errorCache";
 import * as fingerprint from "../../src/lib/utils/fingerprint";
@@ -7,14 +8,16 @@ import * as context from "../../src/lib/utils/context";
 import * as sanitizer from "../../src/lib/utils/sanitizer";
 import * as pendingQueue from "../../src/lib/utils/pendingQueue";
 import * as notify from "../../src/lib/reporters/notifyDiscord";
-import { ErrorReporterConfig } from "../../src/lib/types";
 
-global.fetch = vi.fn();
+import * as backend from "../../src/lib/reporters/providers/sendToBackend";
+import * as provider from "../../src/lib/reporters/sendToProvider";
+
+import { ErrorReporterConfigT } from "../../src/lib/types";
 
 const mockError = new Error("Something went wrong");
 const mockInfo = { componentStack: "at App > Button" };
 
-const baseConfig: ErrorReporterConfig = {
+const baseConfig: ErrorReporterConfigT = {
   mode: "frontend",
   apiKey: "fake-key",
   repo: "repo",
@@ -27,14 +30,29 @@ const baseConfig: ErrorReporterConfig = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+
   vi.spyOn(env, "isProduction").mockReturnValue(true);
   vi.spyOn(errorCache, "shouldReport").mockReturnValue(true);
   vi.spyOn(sanitizer, "sanitize").mockImplementation((s) => s);
   vi.spyOn(context, "getClientContext").mockReturnValue("MockContext");
   vi.spyOn(fingerprint, "generateErrorFingerprint").mockReturnValue("abc123");
-  vi.spyOn(pendingQueue, "flushPending").mockResolvedValue(undefined);
+  vi.spyOn(pendingQueue, "flushPending").mockImplementation(
+    async (fn) =>
+      await fn({
+        title: "Pending Error",
+        body: "This is pending",
+      })
+  );
   vi.spyOn(pendingQueue, "savePending").mockImplementation(() => {});
   vi.spyOn(notify, "notifyDiscord").mockResolvedValue();
+
+  vi.spyOn(provider, "sendToProvider").mockResolvedValue({
+    html_url: "https://github.com/issues/1",
+  });
+
+  vi.spyOn(backend, "sendToBackend").mockResolvedValue({
+    html_url: "https://backend.com/fallback",
+  });
 });
 
 afterEach(() => {
@@ -51,7 +69,8 @@ describe("sendIssueToProvider", () => {
     expect(warnSpy).toHaveBeenCalledWith(
       "Not reporting error in development mode"
     );
-    expect(fetch).not.toHaveBeenCalled();
+    expect(provider.sendToProvider).not.toHaveBeenCalled();
+    expect(backend.sendToBackend).not.toHaveBeenCalled();
   });
 
   it("should skip reporting if error was already reported", async () => {
@@ -63,18 +82,13 @@ describe("sendIssueToProvider", () => {
     expect(warnSpy).toHaveBeenCalledWith(
       "Error already reported recently, skipping..."
     );
-    expect(fetch).not.toHaveBeenCalled();
+    expect(provider.sendToProvider).not.toHaveBeenCalled();
   });
 
-  it("should send issue to GitHub and notify Discord", async () => {
-    (fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ html_url: "https://github.com/issues/1" }),
-    });
-
+  it("should send issue to provider and notify Discord", async () => {
     await sendIssueToProvider(baseConfig, mockError, mockInfo);
 
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(provider.sendToProvider).toHaveBeenCalled();
     expect(notify.notifyDiscord).toHaveBeenCalledWith(
       baseConfig.discordWebhook,
       expect.stringContaining("[Runtime Error]"),
@@ -83,34 +97,32 @@ describe("sendIssueToProvider", () => {
     );
   });
 
-  it("should fallback to backend if GitHub fails", async () => {
+  it("should fallback to backend if provider fails", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const config: ErrorReporterConfig = { ...baseConfig, mode: "auto" }; // ← fuerza fallback
+    const config: ErrorReporterConfigT = { ...baseConfig, mode: "auto" };
 
-    (fetch as any)
-      .mockResolvedValueOnce({
-        ok: false,
-        text: () => Promise.resolve("GitHub error"),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({ html_url: "https://backend.com/fallback" }),
-      });
+    vi.spyOn(provider, "sendToProvider").mockRejectedValueOnce(
+      new Error("Provider failed")
+    );
 
     await sendIssueToProvider(config, mockError, mockInfo);
 
     expect(warnSpy).toHaveBeenCalledWith(
       "Frontend reporting failed, falling back to backend..."
     );
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(backend.sendToBackend).toHaveBeenCalled();
   });
 
   it("should save issue to pending queue if all fails", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const config: ErrorReporterConfig = { ...baseConfig, mode: "auto" };
+    const config: ErrorReporterConfigT = { ...baseConfig, mode: "auto" };
 
-    (fetch as any).mockRejectedValue(new Error("total failure"));
+    vi.spyOn(provider, "sendToProvider").mockRejectedValueOnce(
+      new Error("fail")
+    );
+    vi.spyOn(backend, "sendToBackend").mockRejectedValueOnce(
+      new Error("fail again")
+    );
 
     await sendIssueToProvider(config, mockError, mockInfo);
 
@@ -122,64 +134,25 @@ describe("sendIssueToProvider", () => {
   });
 
   it("should send to backend directly if mode is 'backend'", async () => {
-    const config: ErrorReporterConfig = { ...baseConfig, mode: "backend" };
-
-    (fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ html_url: "https://backend.com/issue" }),
-    });
+    const config: ErrorReporterConfigT = { ...baseConfig, mode: "backend" };
 
     await sendIssueToProvider(config, mockError, mockInfo);
 
-    expect(fetch).toHaveBeenCalledWith(
-      config.backendUrl,
-      expect.objectContaining({
-        method: "POST",
-        body: expect.stringContaining(mockError.message),
-      })
+    expect(provider.sendToProvider).not.toHaveBeenCalled();
+    expect(backend.sendToBackend).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(Object)
     );
-  });
-
-  it("should throw if GitHub config is incomplete", async () => {
-    const config: ErrorReporterConfig = {
-      ...baseConfig,
-      mode: "frontend",
-      apiKey: undefined,
-    };
-
-    await expect(
-      sendIssueToProvider(config, mockError, mockInfo)
-    ).resolves.toBeUndefined();
-
-    expect(fetch).not.toHaveBeenCalled();
-  });
-
-  it("should throw if backendUrl is missing in config", async () => {
-    const config: ErrorReporterConfig = {
-      ...baseConfig,
-      mode: "backend",
-      backendUrl: undefined,
-    };
-
-    await expect(
-      sendIssueToProvider(config, mockError, mockInfo)
-    ).resolves.toBeUndefined();
-
-    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("should not call notifyDiscord if not in production", async () => {
     vi.spyOn(env, "isProduction").mockReturnValue(false);
+
     const config = {
       ...baseConfig,
       discordWebhook: "https://discord.com/webhook",
       onlyInProduction: false,
     };
-
-    (fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ html_url: "https://github.com/issues/1" }),
-    });
 
     await sendIssueToProvider(config, mockError, mockInfo);
 

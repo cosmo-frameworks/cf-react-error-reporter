@@ -38,7 +38,7 @@ describe("notifyDiscord", () => {
     );
 
     const body = JSON.parse((fetch as any).mock.calls[0][1].body);
-    expect(body.embeds[0].title).toBe("🚨 Nuevo error reportado");
+    expect(body.embeds[0].title).toBe("🚨 New Error");
     expect(body.embeds[0].description).toContain(issueTitle);
     expect(body.embeds[0].description).toContain(issueUrl);
     expect(body.embeds[0].fields[0].value).toContain(errorStack.slice(0, 1000));
