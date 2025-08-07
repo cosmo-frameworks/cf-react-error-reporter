@@ -158,7 +158,7 @@ app.listen(3001, () =>
 
 For more information on how to configure or obtain the necessary values to set up the report, please refer to the provider's documentation.
 
-| Provider | Frontend                        |
+| Provider | Documentation                   |
 | -------- | ------------------------------- |
 | Gitlab   | [DOCS](./docs/gitlab/README.md) |
 | Trello   | [DOCS](./docs/trello/README.md) |
