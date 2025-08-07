@@ -26,7 +26,9 @@ createRoot(document.getElementById("root")!).render(
 );
 ```
 
-## How to get the apiKey
+---
+
+## How to get the **apiKey**
 
 To obtain the API key, go to your Preferences, then navigate to Access Tokens. Click on Add new token and select the necessary permissions, specifically those related to the API.
 
@@ -36,7 +38,7 @@ To obtain the API key, go to your Preferences, then navigate to Access Tokens. C
 
 ---
 
-## How to Get the projectId
+## How to Get the **projectId**
 
 To get the **projectId**, simply make a request using curl or directly in the browser to the following URL, replacing **PROJECT_NAME** with the actual name of your project: `https://gitlab.com/api/v4/projects?search=PROJECT_NAME`
 
