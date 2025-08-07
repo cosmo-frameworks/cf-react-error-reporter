@@ -1,4 +1,32 @@
-# How to Get the Required Values to Set Up Trello Integration
+# Basic setup trello provider
+
+```ts
+import {
+  ErrorBoundary,
+  configureReporter,
+  enableGlobalCapture,
+} from 'cf-react-error-reporter'
+
+configureReporter({
+  provider: "trello",
+  apiKey: import.meta.env.VITE_GITHUB_TOKEN,
+  trelloToken: import.meta.env.VITE_GITHUB_TOKEN,
+  trelloBoardId: "BOARD_ID",
+  trelloListId: "LIST_ID",
+  onlyInProduction: true,
+  mode: "frontend", // 'frontend' | 'backend' | 'auto'
+});
+
+enableGlobalCapture(); // Enable global error capturing
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <ErrorBoundary fallback={<div>Something went wrong</div>}>
+      <App />
+    </ErrorBoundary>
+  </StrictMode>
+);
+```
 
 ## Getting the **trelloBoardId**
 

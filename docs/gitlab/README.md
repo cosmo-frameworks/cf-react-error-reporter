@@ -1,4 +1,30 @@
-# How to Get the Required Values to Set Up Gitlab Integration
+# Basic setup gitlab provider
+
+```ts
+import {
+  ErrorBoundary,
+  configureReporter,
+  enableGlobalCapture,
+} from "cf-react-error-reporter";
+
+configureReporter({
+  provider: "gitlab",
+  apiKey: import.meta.env.VITE_API_KEY,
+  projectId: "PROJECT_ID",
+  onlyInProduction: true,
+  mode: "frontend", // 'frontend' | 'backend' | 'auto'
+});
+
+enableGlobalCapture(); // Enable global error capturing
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <ErrorBoundary fallback={<div>Something went wrong</div>}>
+      <App />
+    </ErrorBoundary>
+  </StrictMode>
+);
+```
 
 ## How to get the apiKey
 

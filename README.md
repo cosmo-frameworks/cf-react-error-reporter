@@ -36,8 +36,6 @@ import {
   ErrorBoundary,
   configureReporter,
   enableGlobalCapture,
-  useErrorReporter,
-  reportTestError,
 } from "cf-react-error-reporter";
 
 configureReporter({
@@ -80,16 +78,16 @@ reportTestError();
 
 ## ⚙️ Configuration Options
 
-| Option             | Type                                | Description                                 |
-| ------------------ | ----------------------------------- | ------------------------------------------- |
-| `provider`         | `'github'`                          | Currently only GitHub is supported          |
-| `user`             | `string`                            | GitHub user or organization                 |
-| `repo`             | `string`                            | Repository to create issues in              |
-| `apiKey`           | `string`                            | GitHub Personal Access Token                |
-| `backendUrl`       | `string`                            | Optional backend URL (for CORS or security) |
-| `mode`             | `'frontend' \| 'backend' \| 'auto'` | Submission mode                             |
-| `discordWebhook`   | `string`                            | Discord webhook for alerts                  |
-| `onlyInProduction` | `boolean`                           | Only report if `NODE_ENV === 'production'`  |
+| Option             | Type                                         | Description                                 |
+| ------------------ | -------------------------------------------- | ------------------------------------------- |
+| `provider`         | `'github' \| 'gitlab' \| 'trello' \| 'jira'` | Integration method                          |
+| `user`             | `string`                                     | GitHub user or organization                 |
+| `repo`             | `string`                                     | Repository to create issues in              |
+| `apiKey`           | `string`                                     | GitHub Personal Access Token                |
+| `backendUrl`       | `string`                                     | Optional backend URL (for CORS or security) |
+| `mode`             | `'frontend' \| 'backend' \| 'auto'`          | Submission mode                             |
+| `discordWebhook`   | `string`                                     | Discord webhook for alerts                  |
+| `onlyInProduction` | `boolean`                                    | Only report if `NODE_ENV === 'production'`  |
 
 ---
 
@@ -108,37 +106,63 @@ The following table show the compatibility with de `mode` option with the difere
 
 ## 🖥️ Optional Backend (Node.js)
 
-If you can’t call the GitHub API from the browser (due to CORS or security concerns), you can set up a backend:
+Jira has stricter CORS policies, so using the `mode` **front** option will result in a CORS error. We can work around this by using the `backendUrl` option as a fallback. In case of an error with the front option, it will then attempt to use the back option, as long as it has the corresponding property defined.
 
 ```ts
-// server.js (Express)
 import express from "express";
 import fetch from "node-fetch";
 import bodyParser from "body-parser";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
 
 app.post("/report-error", async (req, res) => {
   const { title, body } = req.body;
+
   const response = await fetch(
-    `https://api.github.com/repos/USER/REPO/issues`,
+    `https://${process.env.JIRA_DOMAIN}/rest/api/3/issue`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        Accept: "application/vnd.github.v3+json",
+        Authorization: `Basic ${Buffer.from(
+          `${process.env.JIRA_USER}:${process.env.JIRA_TOKEN}`
+        ).toString("base64")}`,
+        Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ title, body }),
+      body: JSON.stringify({
+        fields: {
+          project: { key: process.env.JIRA_PROJECT },
+          summary: title,
+          description: body,
+          issuetype: { name: "Bug" },
+        },
+      }),
     }
   );
+
   const data = await response.json();
   res.status(response.status).json(data);
 });
 
-app.listen(3001, () => console.log("Report backend running on port 3001"));
+app.listen(3001, () =>
+  console.log("Jira error reporter backend running on port 3001")
+);
 ```
+
+---
+
+## 📄 Documentation
+
+For more information on how to configure or obtain the necessary values to set up the report, please refer to the provider's documentation.
+
+| Provider | Frontend                        |
+| -------- | ------------------------------- |
+| Gitlab   | [DOCS](./docs/gitlab/README.md) |
+| Trello   | [DOCS](./docs/trello/README.md) |
+| Jira     | [DOCS](./docs/jira/README.md)   |
 
 ---
 
@@ -151,7 +175,6 @@ app.listen(3001, () => console.log("Report backend running on port 3001"));
 
 ## ✅ Future Roadmap
 
-- Support for GitLab, Jira, Trello
 - Recent log capture (`console.log`, etc)
 - UI for pending errors
 - Export to formats like CSV or JSON
