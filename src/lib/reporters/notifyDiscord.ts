@@ -20,8 +20,8 @@ export async function notifyDiscord(
   if (!isProduction()) return;
 
   const embed = {
-    title: `🚨 Nuevo error reportado`,
-    description: `**${issueTitle}**\n[Ver issue en GitHub](${issueUrl})`,
+    title: `🚨 New Error`,
+    description: `**${issueTitle}**\n[Show issue](${issueUrl})`,
     color: 0xff4f4f,
     timestamp: new Date().toISOString(),
     fields: errorStack

@@ -1,13 +1,15 @@
+import { notifyDiscord } from "./notifyDiscord";
+import { sendToProvider } from "./sendToProvider";
+import { sendToBackend } from "./providers/sendToBackend";
+
 import { sanitize } from "../utils/sanitizer";
 import { shouldReport } from "../utils/errorCache";
 import { isProduction } from "../utils/env";
 import { getClientContext } from "../utils/context";
 import { generateErrorFingerprint } from "../utils/fingerprint";
 import { savePending, flushPending } from "../utils/pendingQueue";
-import { notifyDiscord } from "./notifyDiscord";
-import { ErrorReporterConfigT } from "../types";
 
-type IssueT = { title: string; body: string };
+import { ErrorReporterConfigT, IssueT } from "../types";
 
 /**
  * Sends an error report to the appropriate provider based on the configuration.
@@ -97,70 +99,13 @@ async function sendToAppropriateTarget(
   }
 
   if (config.mode === "frontend") {
-    return sendToGitHub(config, issue);
+    return sendToProvider(config, issue);
   }
 
   try {
-    return await sendToGitHub(config, issue);
+    return await sendToProvider(config, issue);
   } catch (e) {
     console.warn("Frontend reporting failed, falling back to backend...");
     return await sendToBackend(config, issue);
   }
-}
-
-/**
- * Sends an issue report to a GitHub repository.
- *
- * @param config - The configuration object containing GitHub settings, including the API key, repository, and user.
- * @param issue - The issue object containing the title and body of the error report.
- * @returns A promise that resolves to the response from the GitHub API.
- * @throws Will throw an error if the GitHub configuration is incomplete or if the request fails.
- */
-async function sendToGitHub(config: ErrorReporterConfigT, issue: IssueT) {
-  if (!config.apiKey || !config.repo || !config.user)
-    throw new Error("Missing GitHub config");
-
-  const url = `https://api.github.com/repos/${config.user}/${config.repo}/issues`;
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${config.apiKey}`,
-      Accept: "application/vnd.github.v3+json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(issue),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`GitHub API error: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
-}
-
-/**
- * Sends an issue report to a specified backend service.
- *
- * @param config - The configuration object containing backend settings.
- * @param issue - The issue object containing the title and body of the error report.
- * @returns A promise that resolves to the response from the backend service.
- * @throws Will throw an error if the backendUrl is missing in the config or if the request fails.
- */
-async function sendToBackend(config: ErrorReporterConfigT, issue: IssueT) {
-  if (!config.backendUrl) throw new Error("Missing backendUrl in config");
-
-  const res = await fetch(config.backendUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(issue),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Backend error: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
 }
