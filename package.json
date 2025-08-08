@@ -1,9 +1,9 @@
 {
   "name": "cf-react-error-reporter",
   "author": "Ridel Saavedra Flores",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": "MIT",
-  "description": "Librería de react para reportar errores en aplicaciones React",
+  "description": "React library for reporting errors in React applications",
   "main": "./dist/cf-react-error-reporter.umd.js",
   "module": "./dist/cf-react-error-reporter.es.js",
   "files": [
@@ -57,5 +57,23 @@
   },
   "dependencies": {
     "js-sha256": "^0.11.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cosmo-frameworks/cf-react-error-reporter.git"
+  },
+  "keywords": [
+    "react",
+    "error-reporting",
+    "automation-error-reporting",
+    "error-tracking",
+    "errors-notification",
+    "errors",
+    "error-handling",
+    "discord",
+    "github",
+    "gitlab",
+    "trello",
+    "jira"
+  ]
 }
